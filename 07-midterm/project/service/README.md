@@ -8,11 +8,13 @@ This directory contains the FastAPI implementation for serving the trained model
 This directory contains the FastAPI implementation for serving the trained model.
 
 ### Current Status
-- Model saved as `baseline_model.pkl`.
-- FastAPI service (`predict.py`) is ready for deployment.
+- Model saved as `best_model.pkl` (weighted model with Threshold = 0.92).
+- FastAPI service (`predict.py`) is updated to include threshold adjustment.
 - Dockerfile created for containerizing the FastAPI service.
+- `/predict` endpoint tested successfully with sample inputs.
 
 ### Next Steps
+- Test the deployed model with real-world or unseen data.
 - Deploy the service to a cloud platform.
 
 ## Deployment Instructions

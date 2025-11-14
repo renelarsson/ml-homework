@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 # Load the trained model
 try:
-    model = joblib.load("baseline_model.pkl")
+    model = joblib.load("best_model.pkl")
     logger.info("Model loaded successfully.")
 except FileNotFoundError:
-    logger.error("Model file not found. Ensure 'baseline_model.pkl' is in the correct directory.")
+    logger.error("Model file not found. Ensure 'best_model.pkl' is in the correct directory.")
     raise
 except Exception as e:
     logger.error(f"An error occurred while loading the model: {e}")
@@ -35,11 +35,15 @@ def predict(data: InputData):
     try:
         # Convert input data to a format suitable for the model
         input_features = [[data.V17, data.V14, data.V12, data.V4, data.Amount]]
-        prediction = model.predict(input_features)
         probability = model.predict_proba(input_features)[0][1]
+
+        # Apply threshold adjustment
+        threshold = 0.92
+        prediction = int(probability >= threshold)
+
         logger.info("Prediction made successfully.")
         return {
-            "prediction": int(prediction[0]),
+            "prediction": prediction,
             "probability": probability
         }
     except Exception as e:
