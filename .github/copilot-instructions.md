@@ -41,4 +41,24 @@ This repo is a set of ML Zoomcamp-style homeworks organized by topic (notebooks 
 - Dependency resolver mismatch: the Dockerfile assumes uv with `uv.lock`; when absent, prefer a fallback flow (pip install from `pyproject.toml`) or add a lock file.
 - Port: service listens on `9696`; update clients/tests if you change it.
 
+### Updated Progress
+
+#### Dataset
+- Dataset details and acquisition instructions are documented in `data/README.md`.
+- Dataset file: `creditcard.csv`.
+
+#### Notebooks
+- EDA completed, and baseline model implemented and evaluated.
+- Next steps: Finalize the notebook for reproducibility and export logic to Python scripts.
+
+#### Source Code
+- Baseline model implemented and saved for deployment.
+- Next steps: Refactor code for deployment readiness and integrate with FastAPI.
+
+#### FastAPI Service
+- Model saved as `baseline_model.pkl`.
+- FastAPI service (`predict.py`) is ready for deployment.
+- Dockerfile created for containerizing the FastAPI service.
+- Next steps: Deploy the service to a cloud platform.
+
 Keep this file concise and specific to this repo. Update it when service contracts, entrypoints, or dependency tooling change.

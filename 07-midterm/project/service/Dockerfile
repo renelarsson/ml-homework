@@ -22,7 +22,7 @@ COPY "pyproject.toml" "uv.lock" ".python-version" ./
 RUN uv sync --locked
 
 # Copy application code and model data into the container
-COPY "predict.py" "baseline_model.pkl" ./
+COPY "predict.py" "best_model.pkl" ./
 
 # Expose TCP port 9696 so it can be accessed from outside the container
 EXPOSE 9696

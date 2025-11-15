@@ -49,3 +49,18 @@ def predict(data: InputData):
     except Exception as e:
         logger.error(f"An error occurred during prediction: {e}")
         return {"error": "An error occurred during prediction. Please check the input data."}
+
+# Add a root endpoint to handle requests to "/"
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the FastAPI service!"}
+
+# Optional: Add a route to handle favicon requests
+@app.get("/favicon.ico")
+def favicon():
+    return {"message": "No favicon available"}
+
+# Add a health check endpoint
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
