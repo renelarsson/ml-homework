@@ -42,7 +42,7 @@ The notebook focuses on building a machine learning pipeline for fraud detection
 
 3. **Model Selection Process and Parameter Tuning:**
 
-   - 2 options are tested for a baseline model1. Use all features to evaluate overall performance or use a subset of the most important features (`V17`, `V14`, `V12`, `V10`, `V11`) to reduce dimensionality and improve efficiency.
+   - 2 options are tested for a baseline model. Either use all features to evaluate overall performance or use a subset of the most important features (`V17`, `V14`, `V12`, `V10`, `V11`) to reduce dimensionality and improve efficiency.
    - The subset option is chosen and SMOTE is applied to address class imbalance.
    - The classification threshold is adjusted to optimize the trade-off between precision and recall. A threshold of 0.95 is chosen for the final model.
    - Higher class weights are assigned to the minority class (Class 1) to address class imbalance (1:69).
@@ -53,6 +53,11 @@ The notebook focuses on building a machine learning pipeline for fraud detection
    - The final model is trained on the full dataset. 
    - Final Model Metrics: Precision 0.84, Recall 0.82, F1-Score 0.83, ROC AUC 0.96.
    - The model is saved as best_model.pkl for deployment.
+
+5. **Run the training script of the final model:**
+   ```bash
+   python train.py
+   ```
 
 ## Environment Management
 
@@ -96,25 +101,25 @@ To manage dependencies and the environment, we use `uv`. Follow these steps to i
 3. Test the `/predict` Endpoint:
 
 - To test the `/predict` endpoint, use the following `curl` command in a different terminal:
-```bash
-curl -X POST http://0.0.0.0:9696/predict \
--H "Content-Type: application/json" \
--d '{
-  "V17": -5.2,
-  "V14": 2.3,
-  "V12": -1.5,
-  "V10": 0.8,
-  "V11": 1.2
-}'
-```
+   ```bash
+   curl -X POST http://0.0.0.0:9696/predict \
+   -H "Content-Type: application/json" \
+   -d '{
+   "V17": -5.2,
+   "V14": 2.3,
+   "V12": -1.5,
+   "V10": 0.8,
+   "V11": 1.2
+   }'
+   ```
 
 Expected response:
-```json
-{
-  "prediction": 0,
-  "probability": 0.00612501203644865
-}
-```
+   ```json
+      {
+      "prediction": 0,
+      "probability": 0.00612501203644865
+      }
+   ```
 
 The service will be available at `http://localhost:9696`.
 
@@ -127,7 +132,7 @@ The service will be available at `http://localhost:9696`.
    ```bash
    docker run -p 9696:9696 fastapi-service
    ```
-3. Test the `/predict` Endpoint.
+3. Test the `/predict` Endpoint Again.
 
 ## Deploying to Fly.io
 
