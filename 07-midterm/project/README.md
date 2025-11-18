@@ -8,7 +8,7 @@ This project focuses on detecting fraudulent credit card transactions using publ
 - **Structure**:
   - Features: Numerical features representing transaction details.
   - Target: A binary variable indicating fraud (1) or legitimate (0).
-- **Size**: ~284,807 transactions with 492 fraud cases (~0.17% fraud rate).
+- **Size**: ~285,000 transactions with 492 fraud cases (~0.17% fraud rate).
 - **Format**: CSV file.
 
 ## Dataset Acquisition
@@ -19,93 +19,40 @@ To download the dataset:
 2. Download the `creditcard.csv` file.
 3. Place the file in the `data/` directory.
 
-### Notes
-- Ensure the dataset is unzipped and accessible in the `data/` directory.
-- Document any preprocessing steps in the `notebooks/` directory.
-
 ## Repository Structure
 - `data/` 
   - Raw and processed data.
 - `notebooks/` 
   - Jupyter notebooks for EDA and modeling.
-- `src/` 
-  - Source code for data processing and model training.
 - `service/` 
   - FastAPI implementation for serving the model.
 
-# Project Setup
+## Notebook
+The notebook focuses on building a machine learning pipeline for fraud detection in credit card transactions. Below is a summary of its key sections:
 
-## Exploratory Data Analysis (EDA)
+1. **Data Preparation and Cleaning:**
+   - The dataset is loaded and explored for basic information.
+   - The Amount column is log-transformed to address skewness.
+   - Outliers in numerical features are capped within the range [-5, 5].
 
-### Summary of Findings
-- **Distributions**: Most features are scaled, with no significant outliers.
-- **Correlations**: Strong correlations observed between `V14` and the target variable.
-- **Outliers**: Minimal outliers detected in `Amount`.
+2. **EDA and Feature Importance Analysis:**
+   - Class imbalance is highlighted, with fraudulent transactions being heavily underrepresented.
+   - Mutual information, Training Set Coefficients/Permutation Importance, and tree-based methods are used to identify important features.
+   - The top features (V17, V14, V12, V10, V11) are selected for modeling.
 
-### EDA Findings
-- **Distributions**: Key features such as `V17`, `V14`, and `Amount` were analyzed for their distributions.
-- **Correlations**: Strong correlations were observed between `V14` and the target variable.
-- **Outliers**: Outliers were identified and handled appropriately.
+3. **Model Selection Process and Parameter Tuning:**
 
-### Preprocessing Steps
-1. Handled missing values by imputing the median.
-2. Scaled numerical features using MinMaxScaler.
-3. Encoded categorical variables using one-hot encoding.
-- Standard scaling was applied to numerical features.
-- Categorical features were one-hot encoded.
+   - 2 options are tested for a baseline model1. Use all features to evaluate overall performance or use a subset of the most important features (`V17`, `V14`, `V12`, `V10`, `V11`) to reduce dimensionality and improve efficiency.
+   - The subset option is chosen and SMOTE is applied to address class imbalance.
+   - The classification threshold is adjusted to optimize the trade-off between precision and recall. A threshold of 0.95 is chosen for the final model.
+   - Higher class weights are assigned to the minority class (Class 1) to address class imbalance (1:69).
+   - Ensemble and stacking techniques are explored to improve performance. 
+   - The weighted Logistic Regression model remains the best-performing model due to its balance of precision and recall.
 
-## Modeling and Tuning
-
-### Alternative Models Tested
-1. Logistic Regression (Baseline)
-2. Random Forest Classifier
-3. Gradient Boosting Classifier
-
-### Final Model Selection
-- **Model**: Weighted Logistic Regression
-- **Rationale**: Best balance of precision and recall.
-
-### Cross-Validation Scores
-| Model                     | Precision | Recall | F1-Score | ROC AUC |
-|---------------------------|-----------|--------|----------|---------|
-| Logistic Regression       | 0.72      | 0.65   | 0.68     | 0.91    |
-| Random Forest Classifier  | 0.78      | 0.70   | 0.74     | 0.94    |
-| Gradient Boosting Classifier | 0.80   | 0.72   | 0.76     | 0.96    |
-| Logistic Regression| 0.85     | 0.82      | 0.80   |
-| Random Forest      | 0.88     | 0.85      | 0.83   |
-| Gradient Boosting  | 0.90     | 0.87      | 0.86   |
-
-## Final Model
-- **Model**: Weighted Logistic Regression
-- **Threshold**: 0.92
-- **Performance**:
-  - **Validation Set**:
-    - Precision: 0.84
-    - Recall: 0.76
-    - F1-Score: 0.80
-    - ROC AUC: 0.98
-  - **Test Set**:
-    - Precision: 0.72
-    - Recall: 0.82
-    - F1-Score: 0.76
-    - ROC AUC: 0.982
-
-## Training the Model
-
-To train the model from scratch, run the following command:
-```bash
-python train.py
-```
-To train the model from scratch, run the following command:
-```bash
-python src/train.py
-```
-
-## Workflow Diagram
-
-```plaintext
-Dataset → Preprocessing → Model Training → API Deployment
-```
+4. **Train, evaluate and save the final model on the full dataset:**
+   - The final model is trained on the full dataset. 
+   - Final Model Metrics: Precision 0.84, Recall 0.82, F1-Score 0.83, ROC AUC 0.96.
+   - The model is saved as best_model.pkl for deployment.
 
 ## Environment Management
 
@@ -137,31 +84,18 @@ To manage dependencies and the environment, we use `uv`. Follow these steps to i
 
 ## Running the Service
 
-### Locally
-1. **Activate the Virtual Environment**:
+### Testing Locally with uvicorn
+1. Activate the Virtual Environment:
    ```bash
    source .venv/bin/activate
    ```
-
-2. **Run the FastAPI Service**:
+2. Run the FastAPI application:
    ```bash
    uvicorn predict:app --host 0.0.0.0 --port 9696
    ```
+3. Test the `/predict` Endpoint:
 
-### Docker
-1. **Build the Docker Image**:
-   ```bash
-   docker build -t fastapi-service .
-   ```
-
-2. **Run the Docker Container**:
-   ```bash
-   docker run -p 9696:9696 fastapi-service
-   ```
-
-### Testing the `/predict` Endpoint
-
-To test the `/predict` endpoint, use the following `curl` command:
+- To test the `/predict` endpoint, use the following `curl` command in a different terminal:
 ```bash
 curl -X POST http://0.0.0.0:9696/predict \
 -H "Content-Type: application/json" \
@@ -169,8 +103,8 @@ curl -X POST http://0.0.0.0:9696/predict \
   "V17": -5.2,
   "V14": 2.3,
   "V12": -1.5,
-  "V4": 0.8,
-  "Amount": 123.45
+  "V10": 0.8,
+  "V11": 1.2
 }'
 ```
 
@@ -178,11 +112,22 @@ Expected response:
 ```json
 {
   "prediction": 0,
-  "probability": 7.186697320405055e-16
+  "probability": 0.00612501203644865
 }
 ```
 
 The service will be available at `http://localhost:9696`.
+
+### Testing Locally with Docker
+1. Build the Docker Image:
+   ```bash
+   docker build -t fastapi-service .
+   ```
+2. Run the Docker Container:
+   ```bash
+   docker run -p 9696:9696 fastapi-service
+   ```
+3. Test the `/predict` Endpoint.
 
 ## Deploying to Fly.io
 
@@ -212,6 +157,10 @@ The service will be available at `http://localhost:9696`.
    ```bash
    flyctl deploy
    ```
+![deploy-1](images/1-deploy-1.png)
+---
+![deploy-2](images/2-deploy-2.png)
+---
 
 4. Verify the app is running:
    ```bash
@@ -224,13 +173,96 @@ The service will be available at `http://localhost:9696`.
    ```
 
 ### Testing the Deployment
-1. Test the root endpoint:
+1. Check Fly.io Deployment Status:
+   ```bash
+   flyctl status
+   ```
+2. Ensure the app is in the running state. If it is stopped, restart it:
+   ```bash
+   flyctl machines start <PROCESS ID>
+   ```
+![start](images/3-start.png)
+---
+
+3. Test the root endpoint:
    ```bash
    curl https://<your-app-name>.fly.dev/
    ```
-2. Test the `/predict` endpoint:
+4. Test the `/predict` endpoint:
    ```bash
-   curl -X POST https://<your-app-name>.fly.dev/predict \
+   curl -X POST https://service-dry-snowflake-4026.fly.dev/predict \
    -H "Content-Type: application/json" \
-   -d '{ "V17": -5.2, "V14": 2.3, "V12": -1.5, "V4": 0.8, "Amount": 123.45}'
+   -d '{
+   "V17": -5.2,
+   "V14": 2.3,
+   "V12": -1.5,
+   "V10": 0.8,
+   "V11": 1.2
+   }'
    ```
+![predict](images/4-predict.png)
+---
+
+## Shutting Down and Disconnecting Services
+
+Follow these steps to properly shut down and disconnect all services, including Docker containers, images, and Fly.io deployments:
+
+### 1. Stop Docker Containers
+To stop all running Docker containers:
+```bash
+docker ps -q | xargs docker stop
+```
+
+### 2. Remove Docker Containers
+To remove all stopped containers:
+```bash
+docker ps -a -q | xargs docker rm
+```
+
+### 3. Remove Docker Images
+To remove all Docker images:
+```bash
+docker images -q | xargs docker rmi -f
+```
+
+### 4. Disconnect from Fly.io
+To disconnect and shut down Fly.io services:
+1. List all Fly.io apps:
+   ```bash
+   fly apps list
+   ```
+2. Stop a specific app (replace `APP_NAME` with your app name):
+   ```bash
+   fly apps destroy APP_NAME
+   ```
+
+### 5. Remove Fly.io Machines
+If you are using Fly.io machines:
+1. List all machines:
+   ```bash
+   fly machines list
+   ```
+2. Remove a specific machine (replace `MACHINE_ID` with the machine ID):
+   ```bash
+   fly machines remove MACHINE_ID
+   ```
+
+### 6. Clean Up Local Fly.io Configuration
+To remove Fly.io configuration files (optional):
+```bash
+rm -rf ~/.fly
+```
+
+### 7. Verify Everything is Shut Down
+- Check for running Docker containers:
+  ```bash
+  docker ps
+  ```
+- Check for Fly.io apps or machines:
+  ```bash
+  fly apps list
+  ```
+
+### Notes
+- Ensure you have the necessary permissions to execute these commands.
+- Use caution when removing Docker images or Fly.io apps, as this action is irreversible.
