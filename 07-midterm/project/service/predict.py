@@ -21,24 +21,24 @@ except Exception as e:
 # Define the FastAPI app
 app = FastAPI()
 
-# Define the input schema
+# Define the input schema 'V17', 'V14', 'V12', 'V10', 'V11'
 class InputData(BaseModel):
     V17: float
     V14: float
     V12: float
-    V4: float
-    Amount: float
+    V10: float
+    V11: float
 
 # Define the prediction endpoint
 @app.post("/predict")
 def predict(data: InputData):
     try:
         # Convert input data to a format suitable for the model
-        input_features = [[data.V17, data.V14, data.V12, data.V4, data.Amount]]
+        input_features = [[data.V17, data.V14, data.V12, data.V10, data.V11]]
         probability = model.predict_proba(input_features)[0][1]
 
         # Apply threshold adjustment
-        threshold = 0.92
+        threshold = 0.95
         prediction = int(probability >= threshold)
 
         logger.info("Prediction made successfully.")

@@ -26,7 +26,7 @@ def load_data():
     # Log-transform the Amount column
     df['Amount'] = np.log1p(df['Amount'])
 
-    features = ['V17', 'V14', 'V12', 'V4', 'Amount']
+    features = ['V17', 'V14', 'V12', 'V10', 'V11']
     target = 'Class'
     X = df[features]
     y = df[target]
@@ -39,7 +39,7 @@ def train_model(X_train, y_train):
 
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
-        ('classifier', RandomForestClassifier(class_weight={0: 1, 1: 50}, random_state=42))
+        ('classifier', RandomForestClassifier(class_weight={0: 1, 1: 69}, random_state=42))
     ])
     pipeline.fit(X_resampled, y_resampled)
     return pipeline
