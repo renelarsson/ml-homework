@@ -1,64 +1,46 @@
 ## AI coding agent guide for ml-homework
 
-This repo is a set of ML Zoomcamp-style homeworks organized by topic (notebooks per module) plus a minimal FastAPI deployment example. Agents should focus on two workflows: running notebooks for exploration and running the deployment service for serving a trained model.
+This repo is a set of ML Zoomcamp-style homeworks organized by topic (notebooks per module) plus FastAPI deployment examples for model serving.
 
 ### Layout and scope
-- Notebooks by topic: `01-intro/hw1.ipynb`, `02-regression/hw2.ipynb`, `03-classification/hw3.ipynb`, `04-evaluation/hw4.ipynb`, `06-trees/hw6.ipynb`.
-- Midterm guidance: `07-midterm/README.md` (project expectations and deliverables).
-- Deployment example: `05-deployment/hw5/` (FastAPI service + Dockerfile) that serves a pickled sklearn pipeline saved as `pipeline_v1.bin`.
+- Notebooks by topic: `01-intro/hw1.ipynb`, `02-regression/hw2.ipynb`, `03-classification/hw3.ipynb`, `04-evaluation/hw4.ipynb`, `06-trees/hw6.ipynb`, `08-deep-learning/hw8.ipynb`, `09-serverless/hw9.ipynb`, `10-kubernetes/`.
+- Deployment examples: `05-deployment/hw5/` (lead conversion prediction) and `07-midterm/project/service/` (fraud detection).
+- Workshops: Guides in `workshops/` for deployment patterns.
 
 ### Core workflows
 1) Notebooks
-- Open the target notebook and run top-to-bottom. Use Python 3.12+ and common ML libs (numpy, pandas, scikit-learn). Data files are colocated in the module folders (e.g., `02-regression/car_fuel_efficiency.csv`).
-- If you need a kernel: create/activate a venv and install minimal deps: numpy, pandas, scikit-learn, matplotlib/seaborn as needed.
+- Open target notebook and run cells top-to-bottom. Use Python 3.12+ with common ML libs (numpy, pandas, scikit-learn, matplotlib/seaborn).
+- Data files colocated in module folders (e.g., `02-regression/car_fuel_efficiency.csv`) or downloaded from external sources (e.g., Kaggle for midterm).
+- Kernel setup: Create venv with `uv venv`, activate, install deps with `uv pip install` or `uv sync` if uv.lock exists.
 
 2) Local model serving (FastAPI)
-- Service files: `05-deployment/hw5/app.py` (container entrypoint) and `05-deployment/hw5/predict.py` (dev entrypoint). Both load `pipeline_v1.bin` from the working directory and expose POST `/predict`.
-- Input schema (Pydantic):
-  - `lead_source: "paid_ads" | "organic_search"`
-  - `number_of_courses_viewed: int >= 0`
-  - `annual_income: float >= 0.0`
-- Response shape: `{ "conversion_probability": float, "convert": bool }` (threshold 0.5).
-- Quick dev run: start with uvicorn against `predict.py` and send a POST to `/predict`. `05-deployment/hw5/test.py` contains a working request example.
+- Service files: `predict.py` (dev entrypoint) loads pickled model and exposes POST `/predict`.
+- Input schemas: Pydantic models in predict.py (e.g., Lead for hw5 with lead_source, number_of_courses_viewed, annual_income; InputData for midterm with V17,V14,V12,V10,V11).
+- Response: Varies (e.g., {conversion_probability, convert} for hw5; {prediction, probability} for midterm).
+- Run: `uvicorn predict:app --host 0.0.0.0 --port 9696`.
+- Test: Use `test.py` for HTTP requests or `predict_single.py` for offline scoring.
 
 3) Container build/run
-- Dockerfile: `05-deployment/hw5/Dockerfile` uses python:3.13-slim and uv (Astral) for dependency sync. It copies `app.py` and `pipeline_v1.bin` and runs `uvicorn app:app --port 9696`.
-- Note: The Dockerfile references `uv.lock` and `.python-version`. If these files are missing, either generate them with uv, or simplify the image to install from `pyproject.toml` (pip install) before copying `app.py`.
+- Dockerfiles use python:3.13-slim and uv for deps. Copy model artifact (.pkl/.bin) and app.py, run uvicorn on port 9696.
+- Build: `docker build -t ml-service .` in service dir.
+- Run: `docker run -p 9696:9696 ml-service`.
 
 ### Conventions and patterns
-- Python version: `pyproject.toml` in `05-deployment/hw5` sets `requires-python = ">=3.12"`; deps include `scikit-learn==1.6.1`, `fastapi`, `requests`.
-- Training artifacts: the API expects `pipeline_v1.bin` (pickle of an sklearn Pipeline) to be present at service start; notebooks or a separate script should produce it.
-- Two app entrypoints: container uses `app.py`; local dev commonly uses `predict.py` (declares `app` and has a `__main__` uvicorn runner). Keep both reading from the same artifact for parity.
-- Testing: there are no unit tests; use `05-deployment/hw5/test.py` for an end-to-end HTTP probe, or `predict_single.py` for offline scoring.
+- Python version: `>=3.12` in pyproject.toml.
+- Dependencies: Managed with uv; runtime deps include scikit-learn==1.6.1, fastapi, uvicorn; dev deps in [dependency-groups].
+- Model artifacts: Pickled/joblib sklearn models saved as .pkl or .bin (e.g., `pipeline_v1.bin` in hw5, `best_model.pkl` in midterm).
+- Two app entrypoints: `app.py` for container (minimal), `predict.py` for dev (includes logging, error handling).
+- Training: Notebooks produce models; separate `train.py` in midterm for reproducibility.
+- Testing: No unit tests; integration via HTTP probes or offline scripts.
 
 ### Examples
-- Sample request body:
-  `{ "lead_source": "organic_search", "number_of_courses_viewed": 4, "annual_income": 80304.0 }`
-- Expected response keys: `conversion_probability` (float), `convert` (bool).
+- Sample request for hw5: `{"lead_source": "organic_search", "number_of_courses_viewed": 4, "annual_income": 80304.0}`
+- Response: `{"conversion_probability": 0.75, "convert": true}`
+- Sample request for midterm: `{"V17": -0.5, "V14": 1.2, "V12": 0.8, "V10": -1.1, "V11": 0.3}`
+- Response: `{"prediction": 0, "probability": 0.02}`
 
-### Common pitfalls (read first)
-- Missing artifact: if `pipeline_v1.bin` isn’t in `05-deployment/hw5/` at runtime, the app will fail on import. Generate or copy the file before running uvicorn or building the image.
-- Dependency resolver mismatch: the Dockerfile assumes uv with `uv.lock`; when absent, prefer a fallback flow (pip install from `pyproject.toml`) or add a lock file.
-- Port: service listens on `9696`; update clients/tests if you change it.
-
-### Updated Progress
-
-#### Dataset
-- Dataset details and acquisition instructions are documented in `data/README.md`.
-- Dataset file: `creditcard.csv`.
-
-#### Notebooks
-- EDA completed, and baseline model implemented and evaluated.
-- Next steps: Finalize the notebook for reproducibility and export logic to Python scripts.
-
-#### Source Code
-- Baseline model implemented and saved for deployment.
-- Next steps: Refactor code for deployment readiness and integrate with FastAPI.
-
-#### FastAPI Service
-- Model saved as `baseline_model.pkl`.
-- FastAPI service (`predict.py`) is ready for deployment.
-- Dockerfile created for containerizing the FastAPI service.
-- Next steps: Deploy the service to a cloud platform.
-
-Keep this file concise and specific to this repo. Update it when service contracts, entrypoints, or dependency tooling change.
+### Common pitfalls
+- Missing artifact: Ensure model file is in service dir before uvicorn or docker build.
+- Dependency resolver: Dockerfile uses uv with uv.lock; fallback to pip install from pyproject.toml if lock missing.
+- Data acquisition: For midterm, download creditcard.csv from Kaggle and place in data/ (create if needed).
+- Port: Services on 9696; update if changed.

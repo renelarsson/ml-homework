@@ -1,0 +1,9 @@
+{
+  // Workspace-level extension guidance. Nothing here is required to run the repo.
+  "recommendations": [],
+  "unwantedRecommendations": [
+    "amazonwebservices.amazon-q-vscode",
+    "iterative.dvc",
+    "codeium.windsurf"
+  ]
+}
